@@ -70,7 +70,7 @@ npm run dev            # or: hexabot dev
 The admin UI runs at `http://localhost:3000`. Then:
 
 1. **Add credentials** in the admin UI: your LLM provider API key (e.g. Google Generative AI, Anthropic, OpenAI) and a GitHub token.
-2. **Import the workflow** from [workflows/Slack2PR.workflow.yml](workflows/Slack2PR.workflow.yml), then point the `repository` inputs at your target repo and map the credential placeholders to the credentials you created.
+2. **Import the workflow**: in the admin UI, open the workflow visual editor and import [workflows/Slack2PR.workflow.yml](workflows/Slack2PR.workflow.yml), then point the `repository` inputs at your target repo and map the credential placeholders to the credentials you created.
 3. **Connect Slack** via the Slack channel integration and subscribe the workflow to it.
 4. **Mention the bot** in Slack: *"Add a dark-mode toggle to the settings page"* — answer a couple of quick-reply questions, and watch the PR arrive.
 
@@ -83,24 +83,7 @@ The admin UI runs at `http://localhost:3000`. Then:
 | Tests | `npm test` |
 | Lint | `npm run lint` |
 | Production start | `npm run start:prod` |
-| Diagnostics | `hexabot check [--docker-only]` |
-
-## Docker
-
-```sh
-hexabot dev --docker
-hexabot dev --docker --services postgres,redis
-```
-
-SQLite is the default database. The Postgres overlay sets `DB_TYPE=postgres` and exposes pgAdmin on port `9000` in dev mode. Docker compose reads `.env.docker` — copy `.env.docker.example` first and change all `dev_only` secrets before exposing the app.
-
-Production-style run:
-
-```sh
-hexabot start --docker --services postgres,redis --build -d
-```
-
-Note: the coding agent's sandboxes talk to the Docker daemon directly, so the API process needs access to a Docker socket. Sandbox reuse is in-process; run a single API replica (multi-replica support would need a distributed sandbox store).
+| Diagnostics | `hexabot check` |
 
 ## Project Map
 
@@ -110,8 +93,7 @@ Note: the coding agent's sandboxes talk to the Docker daemon directly, so the AP
 | `src/app.module.ts` | Root module. |
 | `src/extensions/actions/coding/` | The `ai_coding_agent` action (TanStack AI sandboxes). |
 | `workflows/Slack2PR.workflow.yml` | The Slack2PR workflow bundle (workflow, memory definition, credential refs). |
-| `docker/` | Compose base file and optional service overlays. |
-| `hexabot.config.json` | CLI scripts, env paths, package manager, and Docker config. |
+| `hexabot.config.json` | CLI scripts, env paths, and package manager config. |
 
 ## Why This Project Exists
 
