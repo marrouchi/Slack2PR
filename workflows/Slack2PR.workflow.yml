@@ -1,0 +1,960 @@
+kind: hexabot.workflow.bundle
+schemaVersion: 1
+exportedAt: 2026-07-10T16:20:49.350Z
+workflow:
+  exportId: e0197f87-1d14-4ca4-8f5b-8e672e4efe47
+  name: Slack2PR
+  description: "A React project development cycle driven by the AI coding agent: plan components → implement each in a loop → write unit tests → open a PR → reply."
+  type: conversational
+  schedule: null
+  inputSchema:
+    $schema: http://json-schema.org/draft-07/schema#
+    type: object
+    properties:
+      message_type:
+        title: Message type
+        description: Type of inbound message associated with the triggering event.
+        type: string
+        enum:
+          - text
+          - postback
+          - quickReply
+          - location
+          - attachment
+          - ""
+      payload:
+        title: Payload
+        description: Raw event payload passed to the workflow.
+        anyOf:
+          - oneOf:
+              - type: object
+                properties:
+                  type:
+                    type: string
+                    const: location
+                  coordinates:
+                    type: object
+                    properties:
+                      lat:
+                        type: number
+                      lon:
+                        type: number
+                    required:
+                      - lat
+                      - lon
+                    additionalProperties: false
+                required:
+                  - type
+                  - coordinates
+                additionalProperties: false
+              - type: object
+                properties:
+                  type:
+                    type: string
+                    const: attachment
+                  attachment:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - image
+                          - video
+                          - audio
+                          - file
+                          - unknown
+                      payload:
+                        anyOf:
+                          - type: object
+                            properties:
+                              id:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              url:
+                                type: string
+                            required:
+                              - id
+                            additionalProperties: false
+                          - type: object
+                            properties:
+                              id:
+                                anyOf:
+                                  - type: string
+                                  - type: "null"
+                              url:
+                                type: string
+                            required:
+                              - url
+                            additionalProperties: false
+                    required:
+                      - type
+                      - payload
+                    additionalProperties: false
+                required:
+                  - type
+                  - attachment
+                additionalProperties: false
+          - type: string
+      message:
+        oneOf:
+          - type: object
+            properties:
+              type:
+                type: string
+                const: text
+              data:
+                type: object
+                properties:
+                  text:
+                    type: string
+                required:
+                  - text
+                additionalProperties: false
+            required:
+              - type
+              - data
+            additionalProperties: false
+          - type: object
+            properties:
+              type:
+                type: string
+                const: postback
+              data:
+                type: object
+                properties:
+                  text:
+                    type: string
+                  payload:
+                    type: string
+                required:
+                  - text
+                  - payload
+                additionalProperties: false
+            required:
+              - type
+              - data
+            additionalProperties: false
+          - type: object
+            properties:
+              type:
+                type: string
+                const: quickReply
+              data:
+                type: object
+                properties:
+                  text:
+                    type: string
+                  payload:
+                    type: string
+                required:
+                  - text
+                  - payload
+                additionalProperties: false
+            required:
+              - type
+              - data
+            additionalProperties: false
+          - type: object
+            properties:
+              type:
+                type: string
+                const: location
+              data:
+                type: object
+                properties:
+                  coordinates:
+                    type: object
+                    properties:
+                      lat:
+                        type: number
+                      lon:
+                        type: number
+                    required:
+                      - lat
+                      - lon
+                    additionalProperties: false
+                required:
+                  - coordinates
+                additionalProperties: false
+            required:
+              - type
+              - data
+            additionalProperties: false
+          - type: object
+            properties:
+              type:
+                type: string
+                const: attachment
+              data:
+                type: object
+                properties:
+                  serializedText:
+                    type: string
+                  attachment:
+                    anyOf:
+                      - type: object
+                        properties:
+                          type:
+                            type: string
+                            enum:
+                              - image
+                              - video
+                              - audio
+                              - file
+                              - unknown
+                          payload:
+                            anyOf:
+                              - type: object
+                                properties:
+                                  id:
+                                    anyOf:
+                                      - type: string
+                                      - type: "null"
+                                  url:
+                                    type: string
+                                required:
+                                  - id
+                                additionalProperties: false
+                              - type: object
+                                properties:
+                                  id:
+                                    anyOf:
+                                      - type: string
+                                      - type: "null"
+                                  url:
+                                    type: string
+                                required:
+                                  - url
+                                additionalProperties: false
+                        required:
+                          - type
+                          - payload
+                        additionalProperties: false
+                      - type: array
+                        items:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                                - image
+                                - video
+                                - audio
+                                - file
+                                - unknown
+                            payload:
+                              anyOf:
+                                - type: object
+                                  properties:
+                                    id:
+                                      anyOf:
+                                        - type: string
+                                        - type: "null"
+                                    url:
+                                      type: string
+                                  required:
+                                    - id
+                                  additionalProperties: false
+                                - type: object
+                                  properties:
+                                    id:
+                                      anyOf:
+                                        - type: string
+                                        - type: "null"
+                                    url:
+                                      type: string
+                                  required:
+                                    - url
+                                  additionalProperties: false
+                          required:
+                            - type
+                            - payload
+                          additionalProperties: false
+                required:
+                  - serializedText
+                  - attachment
+                additionalProperties: false
+            required:
+              - type
+              - data
+            additionalProperties: false
+        title: Message
+        description: Full message object received from the channel.
+      text:
+        type: string
+        title: Text
+        description: Extracted text content from the inbound message.
+      mid:
+        title: Message ID
+        description: Unique identifier of the inbound message.
+        type: string
+      thread_id:
+        type: string
+        title: Thread ID
+        description: Identifier of the conversation thread to which this event belongs.
+    required:
+      - message
+      - text
+      - thread_id
+    additionalProperties: false
+  layout:
+    x: 40.19229596913948
+    y: -210.23703078699566
+    zoom: 0.4636349242187197
+    direction: horizontal
+version:
+  number: 4
+  checksum: b751fa7ce7c056e1ffe4d3af748b593ef61c41be7ec845d775a3edb9827cda13
+  message: "Paid tier: upgrade coding tasks to google/gemini-3.1-pro-preview (OpenCode) and interview model to gemini-3.5-flash for reliability and stronger coding."
+  exportedVersionId: cb0b7a3e-48a0-4007-a244-23bc96301dac
+definitionYml: |
+  defaults:
+    settings:
+      timeout_ms: 0
+      retries:
+        enabled: false
+        max_attempts: 3
+        backoff_ms: 25
+        max_delay_ms: 10000
+        jitter: 0
+        multiplier: 1
+  defs:
+    session_memory:
+      kind: memory
+      description: Thread-scoped memory holding the harness session id, plan, and todo list.
+      settings:
+        definition_id: 84690470-d033-45a1-8183-1dad48f083fb
+    interview_model:
+      kind: model
+      description: Model used by the intent classifier and the requirements-interview agent.
+      settings:
+        provider: google
+        model_id: gemini-3.5-flash
+        api_key: 11111111-1111-4111-8111-111111111111
+    ask_user:
+      kind: tools
+      description: Lets the interview agent ask the user a question with quick-reply options.
+      action: send_quick_replies
+      settings:
+        typing: 0
+    say:
+      kind: tools
+      description: Lets the interview agent send a plain text message to the user.
+      action: send_text_message
+      settings:
+        typing: 0
+    classify_intent:
+      kind: task
+      description: Intent classifier. Routes the triggering message to feature
+        development, bug investigation, or code Q&A using structured output.
+      action: ai_infer_object
+      inputs:
+        input_mode: prompt
+        prompt: =$input.text
+        system: "You are the intent classifier of a software development assistant
+          working on a React code base. Classify the user's message into exactly
+          one intent: \"develop\" when the user wants to build a new project or a
+          new feature (or change existing behavior on purpose); \"bug\" when the
+          user reports a bug, issue, error, crash, regression, or unexpected
+          behavior that needs to be investigated; \"question\" when the user asks
+          to understand or explain the existing code without changing it. When
+          unsure, prefer \"develop\"."
+      bindings:
+        model: interview_model
+      settings:
+        temperature: 0
+        output_schema:
+          type: object
+          title: intent_classification
+          description: Intent classification of the user's message.
+          properties:
+            intent:
+              type: string
+              enum:
+                - develop
+                - bug
+                - question
+              description: The single intent that best matches the user's message.
+          required:
+            - intent
+          additionalProperties: false
+    ask_requirement:
+      kind: task
+      description: Requirements interviewer. Reads the conversation (starting with the
+        user's feature request) and asks the single most useful next question via
+        quick replies, so the planner can build against real requirements.
+      action: ai_agent
+      inputs:
+        input_mode: history
+        messages_limit: 12
+        system: "You are a senior product analyst running a short requirements interview
+          before a React feature is built. The conversation begins with the user's
+          feature request; read the whole conversation so far. Ask the SINGLE most
+          useful next question to clarify the feature, and ALWAYS ask it by
+          calling the ask_user tool with 2 to 4 concise quick-reply options (the
+          user can still type their own). Cover, in rough order and only while
+          still unclear: the core problem and who it is for; the key screens or
+          React components and the desired look and feel; and technical
+          constraints, the existing stack or styling approach, and acceptance
+          criteria. Never repeat a question already answered. If everything
+          important is already clear, briefly confirm with the ask_user tool
+          instead of inventing new questions."
+      bindings:
+        model: interview_model
+        tools:
+          - ask_user
+          - say
+      settings:
+        stop_tool_call: ask_user
+    await_requirement:
+      kind: task
+      description: Suspend until the user answers the current requirements question.
+      action: await_reply
+    plan_components:
+      kind: task
+      description: "Planner. Reads the feature request and the requirements interview
+        from the conversation history, breaks the work into React components,
+        writes PLAN.md / TODO.md, and returns a validated plan (plan_mode:
+        required)."
+      action: ai_coding_agent
+      inputs:
+        input_mode: history
+        messages_limit: 12
+        source_type: github
+        repository: https://github.com/example-org/slack2pr-demo
+        system: You are a senior React architect and technical planner working in a
+          cloned repository at /workspace. The conversation history holds the
+          user's feature request followed by a short requirements interview. Do
+          NOT implement any component yet. Using the gathered requirements, break
+          the feature into a focused set of React components (typically 2 to 5),
+          then (1) create or update PLAN.md with a concise architecture plan and
+          (2) create or update TODO.md with one unchecked checkbox per component
+          to build, in build order.
+      bindings:
+        memory:
+          - session_memory
+      settings:
+        harness: opencode
+        model: google/gemini-3.1-pro-preview
+        agent_api_key: 11111111-1111-4111-8111-111111111111
+        agent_api_key_env: GOOGLE_GENERATIVE_AI_API_KEY
+        github_token: 22222222-2222-4222-8222-222222222222
+        git_user_name: Mock Developer
+        git_user_email: mock.developer@example.com
+        install_gh: true
+        docker_image: node:24
+        package_manager: npm
+        setup_commands: []
+        plan_mode: required
+        instructions: "You are working inside a sandboxed clone of the target repository
+          at /workspace, reused across the whole conversation thread. Git is
+          pre-authenticated over HTTPS and, on GitHub, the GitHub CLI (gh) is
+          installed and authenticated via GH_TOKEN. When implementing features,
+          keep PLAN.md and TODO.md up to date as you progress. Never commit to the
+          default branch: delivery steps (opening the feature pull request or
+          shipping an approved bug fix) create a dedicated branch, commit, push,
+          and open a pull request. When investigating a bug or answering a
+          question about the code, work read-only: do not modify, commit, or push
+          anything until the user explicitly approves a fix."
+    announce_plan:
+      kind: task
+      description: Sends the planned component breakdown back to the subscriber.
+      action: send_text_message
+      inputs:
+        text: "=$output.plan_components.plan_status = 'ok' ?
+          $output.plan_components.plan : ('I could not produce a valid plan.' &
+          ($output.plan_components.plan_error ? ' Reason: ' &
+          $output.plan_components.plan_error : ''))"
+      settings:
+        typing: 0
+    implement_component:
+      kind: task
+      description: Implementer. Builds exactly one React component per loop iteration
+        and ticks it off in TODO.md, reusing the thread workspace and agent
+        session.
+      action: ai_coding_agent
+      inputs:
+        prompt: "=('Implement exactly one React component now. Component: ' &
+          $iteration.item.title & '. Description: ' &
+          ($exists($iteration.item.description) ? $iteration.item.description :
+          'No description provided.') & '. After creating it, tick its item off in
+          TODO.md.')"
+        source_type: github
+        repository: https://github.com/example-org/slack2pr-demo
+        system: "You are a senior React engineer implementing ONE component per run in
+          the repository at /workspace. Implement only the component described in
+          the prompt: create its component file plus any minimal styles or types
+          it needs, following the conventions already present in the project. Do
+          NOT implement other components and do NOT write tests in this step. When
+          done, tick the matching checkbox in TODO.md."
+      bindings:
+        memory:
+          - session_memory
+      settings:
+        harness: opencode
+        model: google/gemini-3.1-pro-preview
+        agent_api_key: 11111111-1111-4111-8111-111111111111
+        agent_api_key_env: GOOGLE_GENERATIVE_AI_API_KEY
+        github_token: 22222222-2222-4222-8222-222222222222
+        git_user_name: Mock Developer
+        git_user_email: mock.developer@example.com
+        install_gh: true
+        docker_image: node:24
+        package_manager: npm
+        setup_commands: []
+        plan_mode: off
+        instructions: "You are working inside a sandboxed clone of the target repository
+          at /workspace, reused across the whole conversation thread. Git is
+          pre-authenticated over HTTPS and, on GitHub, the GitHub CLI (gh) is
+          installed and authenticated via GH_TOKEN. When implementing features,
+          keep PLAN.md and TODO.md up to date as you progress. Never commit to the
+          default branch: delivery steps (opening the feature pull request or
+          shipping an approved bug fix) create a dedicated branch, commit, push,
+          and open a pull request. When investigating a bug or answering a
+          question about the code, work read-only: do not modify, commit, or push
+          anything until the user explicitly approves a fix."
+    test_components:
+      kind: task
+      description: Tester. Writes unit tests for every implemented React component,
+        reusing the thread workspace and agent session.
+      action: ai_coding_agent
+      inputs:
+        prompt: Write unit tests for every React component you implemented in this
+          session. Cover rendering and the key props and behavior of each
+          component. Use the project's existing test tooling (React Testing
+          Library with Vitest or Jest); if none is set up, add a minimal one. Make
+          sure the tests pass, then note in TODO.md that tests were added.
+        source_type: github
+        repository: https://github.com/example-org/slack2pr-demo
+        system: You are a senior React test engineer working in /workspace. Add unit
+          tests for each component listed in PLAN.md / TODO.md. Prefer the
+          project's existing test setup and keep tests focused and deterministic.
+      bindings:
+        memory:
+          - session_memory
+      settings:
+        harness: opencode
+        model: google/gemini-3.1-pro-preview
+        agent_api_key: 11111111-1111-4111-8111-111111111111
+        agent_api_key_env: GOOGLE_GENERATIVE_AI_API_KEY
+        github_token: 22222222-2222-4222-8222-222222222222
+        git_user_name: Mock Developer
+        git_user_email: mock.developer@example.com
+        install_gh: true
+        docker_image: node:24
+        package_manager: npm
+        setup_commands: []
+        plan_mode: off
+        instructions: "You are working inside a sandboxed clone of the target repository
+          at /workspace, reused across the whole conversation thread. Git is
+          pre-authenticated over HTTPS and, on GitHub, the GitHub CLI (gh) is
+          installed and authenticated via GH_TOKEN. When implementing features,
+          keep PLAN.md and TODO.md up to date as you progress. Never commit to the
+          default branch: delivery steps (opening the feature pull request or
+          shipping an approved bug fix) create a dedicated branch, commit, push,
+          and open a pull request. When investigating a bug or answering a
+          question about the code, work read-only: do not modify, commit, or push
+          anything until the user explicitly approves a fix."
+    open_pr:
+      kind: task
+      description: PR opener. Branches, commits, pushes, and opens a pull request for
+        the new components and tests, then returns the pull request URL.
+      action: ai_coding_agent
+      inputs:
+        prompt: Commit all the components and their tests, push them on a new feature
+          branch, and open a pull request. Your final answer MUST be only the
+          resulting pull request URL (starting with https://). If you cannot open
+          a pull request, reply with a line starting with "ERROR:" explaining why.
+        source_type: github
+        repository: https://github.com/example-org/slack2pr-demo
+        system: You are a senior engineer delivering the work from /workspace. Git is
+          pre-authenticated and the GitHub CLI (gh) is installed and authenticated
+          via GH_TOKEN. Do NOT commit to the default branch. Create a new feature
+          branch, commit all components and tests with clear messages, push with
+          `git push -u origin <branch>`, then open a pull request with `gh pr
+          create --fill`. Report ONLY the resulting pull request URL.
+      bindings:
+        memory:
+          - session_memory
+      settings:
+        harness: opencode
+        model: google/gemini-3.1-pro-preview
+        agent_api_key: 11111111-1111-4111-8111-111111111111
+        agent_api_key_env: GOOGLE_GENERATIVE_AI_API_KEY
+        github_token: 22222222-2222-4222-8222-222222222222
+        git_user_name: Mock Developer
+        git_user_email: mock.developer@example.com
+        install_gh: true
+        docker_image: node:24
+        package_manager: npm
+        setup_commands: []
+        plan_mode: off
+        instructions: "You are working inside a sandboxed clone of the target repository
+          at /workspace, reused across the whole conversation thread. Git is
+          pre-authenticated over HTTPS and, on GitHub, the GitHub CLI (gh) is
+          installed and authenticated via GH_TOKEN. When implementing features,
+          keep PLAN.md and TODO.md up to date as you progress. Never commit to the
+          default branch: delivery steps (opening the feature pull request or
+          shipping an approved bug fix) create a dedicated branch, commit, push,
+          and open a pull request. When investigating a bug or answering a
+          question about the code, work read-only: do not modify, commit, or push
+          anything until the user explicitly approves a fix."
+    send_summary:
+      kind: task
+      description: Sends the final message. Reports the pull request URL only when the
+        PR step actually succeeded; otherwise it says the PR could not be opened.
+      action: send_text_message
+      inputs:
+        text: "=($output.open_pr.ok and $output.open_pr.text != '') ? ('Done! I planned,
+          built, and tested the React components and opened a pull request: ' &
+          $output.open_pr.text) : ('I planned the components' &
+          ($output.plan_components.todos ? ' (' &
+          $string($count($output.plan_components.todos)) & ' of them)' : '') & ',
+          but I could not finish opening the pull request automatically.' &
+          ($output.open_pr.error ? ' Reason: ' & $output.open_pr.error : ''))"
+      settings:
+        typing: 0
+    investigate_bug:
+      kind: task
+      description: Bug investigator. Inspects the repository read-only to identify the
+        root cause of the reported issue and suggest corrective measures, going
+        one level deeper on each loop round, reusing the thread workspace and
+        agent session.
+      action: ai_coding_agent
+      inputs:
+        input_mode: history
+        messages_limit: 6
+        source_type: github
+        repository: https://github.com/example-org/slack2pr-demo
+        system: "You are a senior software engineer acting as a bug INVESTIGATOR in the
+          repository cloned at /workspace. The conversation history contains the
+          bug report and the user's follow-up choices. Investigate the code base
+          to find the most likely root cause: trace the reported symptom through
+          the relevant components, hooks, state, and data flow, and run read-only
+          checks (searching, reading files, running tests) as needed. Do NOT
+          modify, commit, or push any code. Reply with a concise plain-text report
+          with three short sections: what you inspected; the root cause or your
+          leading hypotheses ranked by likelihood (with file paths); and the
+          suggested corrective measures. If the user asked you to dig deeper, go
+          one level further than your previous report instead of repeating it."
+      bindings:
+        memory:
+          - session_memory
+      settings:
+        harness: opencode
+        model: google/gemini-3.1-pro-preview
+        agent_api_key: 11111111-1111-4111-8111-111111111111
+        agent_api_key_env: GOOGLE_GENERATIVE_AI_API_KEY
+        github_token: 22222222-2222-4222-8222-222222222222
+        git_user_name: Mock Developer
+        git_user_email: mock.developer@example.com
+        install_gh: true
+        docker_image: node:24
+        package_manager: npm
+        setup_commands: []
+        plan_mode: off
+        instructions: "You are working inside a sandboxed clone of the target repository
+          at /workspace, reused across the whole conversation thread. Git is
+          pre-authenticated over HTTPS and, on GitHub, the GitHub CLI (gh) is
+          installed and authenticated via GH_TOKEN. When implementing features,
+          keep PLAN.md and TODO.md up to date as you progress. Never commit to the
+          default branch: delivery steps (opening the feature pull request or
+          shipping an approved bug fix) create a dedicated branch, commit, push,
+          and open a pull request. When investigating a bug or answering a
+          question about the code, work read-only: do not modify, commit, or push
+          anything until the user explicitly approves a fix."
+    report_findings:
+      kind: task
+      description: Sends the investigator's root-cause report back to the subscriber.
+      action: send_text_message
+      inputs:
+        text: "=$output.investigate_bug.ok and $output.investigate_bug.text != '' ?
+          $output.investigate_bug.text : ('I could not complete the
+          investigation.' & ($output.investigate_bug.error ? ' Reason: ' &
+          $output.investigate_bug.error : ''))"
+      settings:
+        typing: 0
+    ask_investigation_next:
+      kind: task
+      description: Asks the user whether the investigation should continue, via quick replies.
+      action: send_quick_replies
+      inputs:
+        text: Should I dig deeper, go ahead and fix it, or stop here?
+        quick_replies:
+          - title: Dig deeper
+            payload: dig_deeper
+          - title: Fix it
+            payload: fix_issue
+          - title: That's enough
+            payload: stop_investigation
+      settings:
+        typing: 0
+    await_investigation_choice:
+      kind: task
+      description: Suspend until the user answers the investigation follow-up question.
+      action: await_reply
+    close_investigation:
+      kind: task
+      description: Sends a short closing message when the user ends the investigation
+        without requesting a fix.
+      action: send_text_message
+      inputs:
+        text: That wraps up my investigation. If you change your mind, report the issue
+          again and pick "Fix it" after the investigation and I will ship the fix.
+      settings:
+        typing: 0
+    fix_bug:
+      kind: task
+      description: Bug fixer. After the user approves the fix, implements the smallest
+        safe change addressing the investigated root cause, verifies it, then
+        branches, commits, pushes, and opens a pull request, reusing the thread
+        workspace and agent session.
+      action: ai_coding_agent
+      inputs:
+        prompt: "=('The user approved fixing the issue. Implement the fix now, based on
+          your investigation. Investigation report: ' &
+          $output.investigate_bug.text)"
+        source_type: github
+        repository: https://github.com/example-org/slack2pr-demo
+        system: You are a senior software engineer fixing a bug you previously
+          investigated in the repository at /workspace. Implement the smallest
+          safe fix that addresses the root cause from the investigation report,
+          following the conventions already present in the project, and add or
+          update a unit test covering the regression when the project has test
+          tooling. Run the relevant tests to verify the fix. Then create a new fix
+          branch, commit with a clear message, push with `git push -u origin
+          <branch>`, and open a pull request with `gh pr create --fill`. Your
+          final answer MUST be a short summary of the fix ending with the pull
+          request URL (or a line starting with "ERROR:" explaining why you could
+          not open one).
+      bindings:
+        memory:
+          - session_memory
+      settings:
+        harness: opencode
+        model: google/gemini-3.1-pro-preview
+        agent_api_key: 11111111-1111-4111-8111-111111111111
+        agent_api_key_env: GOOGLE_GENERATIVE_AI_API_KEY
+        github_token: 22222222-2222-4222-8222-222222222222
+        git_user_name: Mock Developer
+        git_user_email: mock.developer@example.com
+        install_gh: true
+        docker_image: node:24
+        package_manager: npm
+        setup_commands: []
+        plan_mode: off
+        instructions: "You are working inside a sandboxed clone of the target repository
+          at /workspace, reused across the whole conversation thread. Git is
+          pre-authenticated over HTTPS and, on GitHub, the GitHub CLI (gh) is
+          installed and authenticated via GH_TOKEN. When implementing features,
+          keep PLAN.md and TODO.md up to date as you progress. Never commit to the
+          default branch: delivery steps (opening the feature pull request or
+          shipping an approved bug fix) create a dedicated branch, commit, push,
+          and open a pull request. When investigating a bug or answering a
+          question about the code, work read-only: do not modify, commit, or push
+          anything until the user explicitly approves a fix."
+    report_fix:
+      kind: task
+      description: Sends the fix summary and pull request link back to the subscriber.
+      action: send_text_message
+      inputs:
+        text: |-
+          =$output.fix_bug.ok and $output.fix_bug.text != ''
+            ? $output.fix_bug.text
+            : ('I could not apply the fix automatically.' &
+              ($output.fix_bug.error ? ' Reason: ' & $output.fix_bug.error : ''))
+      settings:
+        typing: 0
+    answer_question:
+      kind: task
+      description: Code explainer. Inspects the repository read-only and answers the
+        user's question about the code with a simple, concise explanation, reusing
+        the thread workspace and agent session.
+      action: ai_coding_agent
+      inputs:
+        input_mode: history
+        messages_limit: 6
+        source_type: github
+        repository: https://github.com/example-org/slack2pr-demo
+        system: You are a senior engineer answering a question about the code in the
+          repository cloned at /workspace. Read the conversation history to
+          understand the question, inspect the relevant files read-only, and reply
+          with a simple, concise explanation in plain language that a teammate can
+          read in under a minute. Mention the key file paths when helpful and
+          avoid pasting large code blocks. Do NOT modify, commit, or push any
+          code.
+      bindings:
+        memory:
+          - session_memory
+      settings:
+        harness: opencode
+        model: google/gemini-3.1-pro-preview
+        agent_api_key: 11111111-1111-4111-8111-111111111111
+        agent_api_key_env: GOOGLE_GENERATIVE_AI_API_KEY
+        github_token: 22222222-2222-4222-8222-222222222222
+        git_user_name: Mock Developer
+        git_user_email: mock.developer@example.com
+        install_gh: true
+        docker_image: node:24
+        package_manager: npm
+        setup_commands: []
+        plan_mode: off
+        instructions: "You are working inside a sandboxed clone of the target repository
+          at /workspace, reused across the whole conversation thread. Git is
+          pre-authenticated over HTTPS and, on GitHub, the GitHub CLI (gh) is
+          installed and authenticated via GH_TOKEN. When implementing features,
+          keep PLAN.md and TODO.md up to date as you progress. Never commit to the
+          default branch: delivery steps (opening the feature pull request or
+          shipping an approved bug fix) create a dedicated branch, commit, push,
+          and open a pull request. When investigating a bug or answering a
+          question about the code, work read-only: do not modify, commit, or push
+          anything until the user explicitly approves a fix."
+    send_answer:
+      kind: task
+      description: Sends the code explanation back to the subscriber.
+      action: send_text_message
+      inputs:
+        text: "=$output.answer_question.ok and $output.answer_question.text != '' ?
+          $output.answer_question.text : ('I could not inspect the code to answer
+          your question.' & ($output.answer_question.error ? ' Reason: ' &
+          $output.answer_question.error : ''))"
+      settings:
+        typing: 0
+  flow:
+    - do: classify_intent
+    - conditional:
+        when:
+          - condition: =$output.classify_intent.object.intent = 'bug'
+            steps:
+              - loop:
+                  type: for_each
+                  name: investigation_rounds
+                  description: Investigate the reported issue in up to three rounds, asking the
+                    user via quick replies after each report whether to dig
+                    deeper, fix the issue, or stop.
+                  for_each:
+                    item: round
+                    in: =[1, 2, 3]
+                  until: |-
+                    =$output.await_investigation_choice.message.data.payload
+                      in ['stop_investigation', 'fix_issue']
+                  steps:
+                    - do: investigate_bug
+                    - do: report_findings
+                    - do: ask_investigation_next
+                    - do: await_investigation_choice
+              - conditional:
+                  when:
+                    - condition: =$output.await_investigation_choice.message.data.payload =
+                        'fix_issue'
+                      steps:
+                        - do: fix_bug
+                        - do: report_fix
+                    - else: true
+                      steps:
+                        - do: close_investigation
+          - condition: =$output.classify_intent.object.intent = 'question'
+            steps:
+              - do: answer_question
+              - do: send_answer
+          - else: true
+            steps:
+              - loop:
+                  type: for_each
+                  name: gather_requirements
+                  description: Ask up to a few grounded requirements questions with quick replies,
+                    awaiting each answer.
+                  for_each:
+                    item: round
+                    in: =[1, 2, 3]
+                  steps:
+                    - do: ask_requirement
+                    - do: await_requirement
+              - do: plan_components
+              - do: announce_plan
+              - loop:
+                  type: for_each
+                  name: implement_components
+                  description: Implement one React component per iteration.
+                  for_each:
+                    item: component
+                    in: "=($exists($output.plan_components.todos) ? $output.plan_components.todos :
+                      [])"
+                  steps:
+                    - do: implement_component
+              - do: test_components
+              - do: open_pr
+              - do: send_summary
+  outputs:
+    intent: =$output.classify_intent.object.intent
+    plan: "=$exists($output.plan_components) ? $output.plan_components.plan : null"
+    plan_status: "=$exists($output.plan_components) ?
+      $output.plan_components.plan_status : null"
+    components_planned: "=($exists($output.plan_components.todos) ?
+      $count($output.plan_components.todos) : 0)"
+    pull_request_opened: =$exists($output.open_pr) and $output.open_pr.ok and
+      $output.open_pr.text != ''
+    pull_request: "=$exists($output.open_pr) ? $output.open_pr.text : null"
+    root_cause_report: "=$exists($output.investigate_bug) ? $output.investigate_bug.text : null"
+    fix_report: "=$exists($output.fix_bug) ? $output.fix_bug.text : null"
+    fix_applied: =$exists($output.fix_bug) and $output.fix_bug.ok
+    code_answer: "=$exists($output.answer_question) ? $output.answer_question.text : null"
+    final_message: |-
+      =$exists($output.send_summary)
+        ? $output.send_summary.sent.envelope.data.text
+        : $exists($output.send_answer)
+          ? $output.send_answer.sent.envelope.data.text
+          : $exists($output.report_fix)
+            ? $output.report_fix.sent.envelope.data.text
+            : $exists($output.close_investigation)
+              ? $output.close_investigation.sent.envelope.data.text
+              : null
+resources:
+  memoryDefinitions:
+    - exportId: 84690470-d033-45a1-8183-1dad48f083fb
+      name: AI Coding Agent — Session
+      slug: ai_coding_agent
+      scope: thread
+      schema:
+        $schema: https://json-schema.org/draft/2020-12/schema
+        title: AI Coding Agent — Session
+        description: Harness session id, plan, and todo list persisted per conversation thread so the ai_coding_agent action can resume the agent and drive a multi-step build across runs.
+        type: object
+        additionalProperties: true
+        properties:
+          sessionId:
+            type: string
+            description: Harness session id returned by the last ai_coding_agent run in this thread.
+          plan:
+            type: string
+            description: High-level plan produced by the coding agent (e.g. a React component breakdown), persisted so later runs in the thread can build against it.
+          todos:
+            type: array
+            description: Structured todo list the coding agent works through, typically one entry per unit of work (e.g. per React component). A workflow loop can iterate these.
+            items:
+              type: object
+              additionalProperties: true
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  description: Short title of the unit of work.
+                description:
+                  type: string
+                  description: Optional longer description of the unit of work.
+                status:
+                  type: string
+                  description: Optional progress marker, e.g. pending, in_progress, or done.
+      ttlSeconds: null
+  mcpServers: []
+  credentials:
+    - exportId: 11111111-1111-4111-8111-111111111111
+      name: Mock Google Generative AI API Key
+    - exportId: 22222222-2222-4222-8222-222222222222
+      name: Mock GitHub Token
+  contentTypes: []
+  labelGroups: []
+  labels: []
+  workflows: []
