@@ -1,0 +1,81 @@
+{
+  "name": "@hexabot/slack-2-pr",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Slack2PR : AI Code Compagnion on Slack.",
+  "author": "Hexastack",
+  "license": "FCL-1.0-ALv2",
+  "scripts": {
+    "dev": "nest start --watch",
+    "start": "nest start",
+    "build": "nest build",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" --fix",
+    "test": "jest --config jest.config.js --passWithNoTests",
+    "start:prod": "node dist/main"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.53",
+    "@ai-sdk/amazon-bedrock": "4.0.107",
+    "@ai-sdk/google": "^3.0.82",
+    "@ai-sdk/groq": "^3.0.41",
+    "@ai-sdk/mistral": "^3.0.39",
+    "@hexabot-ai/api": "^3.3.2",
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/core": "^11.1.19",
+    "@nestjs/platform-express": "^11.1.19",
+    "ai": "^6.0.17",
+    "chokidar": "^4.0.3",
+    "dotenv": "^16.4.5",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
+    "@eslint/js": "^9.39.4",
+    "@nestjs/cli": "^11.0.21",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.59.1",
+    "@typescript-eslint/parser": "^8.59.1",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-prettier": "^5.5.5",
+    "globals": "^17.6.0",
+    "jest": "^30.2.0",
+    "prettier": "^3.8.3",
+    "ts-jest": "^29.4.5",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.1.3"
+  },
+  "engines": {
+    "node": "^24.17.0"
+  },
+  "overrides": {
+    "ws": "8.21.0",
+    "multer": "2.2.0",
+    "js-yaml": "4.2.0",
+    "@opentelemetry/core": "2.8.0",
+    "protobufjs": "7.6.3",
+    "@protobufjs/utf8": "1.1.1",
+    "@grpc/grpc-js": "1.14.4",
+    "hono": "4.12.25",
+    "fast-uri": "3.1.2",
+    "express-rate-limit": "8.5.2",
+    "ip-address": "10.2.0",
+    "uuid": "11.1.1",
+    "brace-expansion": "5.0.6",
+    "qs": "6.15.2",
+    "tar": "7.5.16",
+    "sqlite3": "6.0.1",
+    "node-gyp": "12.3.0",
+    "@opentelemetry/sdk-node": "0.218.0",
+    "@opentelemetry/auto-instrumentations-node": "0.76.0",
+    "nestjs-dynamic-providers": {
+      "glob": "11.1.0"
+    }
+  }
+}
