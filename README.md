@@ -1,43 +1,78 @@
-# Hexabot Template Starter
+# Slack2PR — Your AI Code Companion on Slack
 
-A small launchpad for building Hexabot AI automation apps.
+Mention it in Slack like a teammate, describe a feature or a bug, and it plans, codes, tests, and opens a pull request on GitHub.
 
-This template gives you a ready-to-run Nest app powered by `@hexabot-ai/api`. That dependency brings the Hexabot runtime, workflow engine, extension discovery, and built admin frontend, so this repo can stay focused on your project-specific code.
+Slack2PR is a [Hexabot](https://hexabot.ai) app that automates the software development lifecycle end to end: a Slack message triggers an agentic workflow that interviews you about requirements, breaks the work into components, implements them one by one inside a sandboxed clone of your repository, writes unit tests, and replies in the thread with a PR link. It exists to answer the question every Hexabot engineer eventually gets asked: *"Are you using it yourself?"* — yes, even to build Hexabot.
 
-Hexabot lets you build agentic workflows across channels: conversational, manual, scheduled, tool-calling, memory-aware, or whatever your automation needs next.
+## How It Works
+
+```
+Slack message
+    │
+    ▼
+Slack channel (hexabot-channel-slack)
+    │
+    ▼
+Slack2PR workflow ── classify intent
+    │
+    ├─ develop  → requirements interview → plan components → implement each
+    │             in a loop → write unit tests → open PR → reply with the URL
+    ├─ bug      → read-only investigation rounds → user picks "dig deeper" /
+    │             "fix it" / "stop" → approved fixes ship as a PR
+    └─ question → read-only code inspection → concise answer in the thread
+```
+
+Three building blocks:
+
+1. **Slack channel** — the [Slack channel integration](https://hexabot.ai/extensions/67613afd203814420b6483d1) (`hexabot-channel-slack`) connects a Slack workspace to Hexabot, so mentioning the bot starts a conversation thread.
+2. **Slack2PR workflow** — [workflows/Slack2PR.workflow.yml](workflows/Slack2PR.workflow.yml) orchestrates the whole cycle: intent classification, a quick-reply requirements interview, and the plan → implement loop → test → PR pipeline, with thread-scoped memory carrying the plan and todo list between steps.
+3. **AI coding agent action** — [src/extensions/actions/coding/](src/extensions/actions/coding/) is a custom Hexabot action (`ai_coding_agent`) that runs a coding harness inside a Docker sandbox.
+
+## The AI Coding Agent Action
+
+The heart of this project. It wraps [TanStack AI sandboxes](https://tanstack.com/ai) (`@tanstack/ai-sandbox` + `@tanstack/ai-sandbox-docker`) as a Hexabot workflow action:
+
+- **Pluggable harnesses** — runs Claude Code, Codex, OpenCode, or Grok Build; pick the harness and model per task in the workflow YAML. Harness CLIs are installed into the sandbox automatically when missing.
+- **Sandboxed workspaces** — each conversation thread gets a Docker container with a clone of the target repository at `/workspace`. The sandbox is reused across the thread (`per_thread` lifecycle) so the plan, the implemented components, and the harness session survive between workflow steps, then torn down when the thread closes or goes idle.
+- **Git and GitHub ready** — HTTPS git auth and the GitHub CLI are pre-configured from Hexabot credentials, so the agent can branch, commit, push, and `gh pr create` without ever seeing the raw token.
+- **Plan contract** — with `plan_mode: optional | required`, the action injects a structured-output contract into the system prompt and parses the returned plan and todo list into thread memory, so the workflow can loop over todos deterministically (one component per iteration).
+- **Session resume** — the harness session id is persisted in thread-scoped memory, letting later steps (implement, test, PR) continue the same agent session.
+- **Guardrails** — command allow/ask/deny policies (with `sudo`, `rm -rf`, etc. denied by default), file read/write policies, and secrets injected as environment variables only.
+
+Layout of [src/extensions/actions/coding/](src/extensions/actions/coding/):
+
+| File | Purpose |
+| --- | --- |
+| `ai-coding-agent.action.ts` | The action: prompt building, sandbox lease per thread, plan enforcement, memory persistence. |
+| `ai-coding-agent.runtime.ts` | Sandbox definition and TanStack chat run wiring. |
+| `ai-coding-agent.schemas.ts` | Zod input / output / settings contracts. |
+| `ai-coding-agent.constants.ts` | Harness defaults, plan contract prompt, git/GH bootstrap commands. |
+| `ai-coding-agent.modules.ts` | Lazy loading of the TanStack AI modules. |
+| `ai-coding-agent.utils.ts` | State-block parsing, session helpers. |
 
 ## Quick Start
 
 Requirements:
 
 - Node.js `24.17.x`
-- npm, unless you change `hexabot.config.json`
-- Docker only for `hexabot ... --docker`
+- Docker (required — the coding agent runs its sandboxes in Docker)
+- A Slack app for your workspace ([setup guide](https://hexabot.ai/extensions/67613afd203814420b6483d1))
+- An LLM provider API key for your chosen harness, and a GitHub token with repo access
 
-Install the CLI and create an app:
+Run it:
 
 ```sh
-npm install -g @hexabot-ai/cli@latest
-npx @hexabot-ai/cli@latest create support-bot
-cd support-bot
-hexabot dev
+npm install
+cp .env.example .env   # set SEED_ADMIN_* before first startup
+npm run dev            # or: hexabot dev
 ```
 
-The CLI creates `.env`, asks for the first admin credentials, installs dependencies, and starts local development with SQLite.
+The admin UI runs at `http://localhost:3000`. Then:
 
-The admin UI runs at `http://localhost:3000`.
-
-If you run this template directly, edit `SEED_ADMIN_*` in `.env` before the first startup.
-
-## What You Can Build Here
-
-- Workflow actions with typed Zod input, output, and settings.
-- Channel integrations for chat, messaging, widgets, and other entry points.
-- Helper services for reusable integrations.
-- Binding and memory extensions when your workflows need shared capabilities or LLM-oriented context.
-- App-specific Nest modules, controllers, and services.
-
-The starter action lives at `src/extensions/actions/dummy.action.ts`. Copy it, rename it, and make it do real work.
+1. **Add credentials** in the admin UI: your LLM provider API key (e.g. Google Generative AI, Anthropic, OpenAI) and a GitHub token.
+2. **Import the workflow** from [workflows/Slack2PR.workflow.yml](workflows/Slack2PR.workflow.yml), then point the `repository` inputs at your target repo and map the credential placeholders to the credentials you created.
+3. **Connect Slack** via the Slack channel integration and subscribe the workflow to it.
+4. **Mention the bot** in Slack: *"Add a dark-mode toggle to the settings page"* — answer a couple of quick-reply questions, and watch the PR arrive.
 
 ## Commands
 
@@ -45,51 +80,39 @@ The starter action lives at `src/extensions/actions/dummy.action.ts`. Copy it, r
 | --- | --- |
 | Local dev | `npm run dev` or `hexabot dev` |
 | Build | `npm run build` |
+| Tests | `npm test` |
+| Lint | `npm run lint` |
 | Production start | `npm run start:prod` |
-| CLI start | `hexabot start` |
 | Diagnostics | `hexabot check [--docker-only]` |
 
 ## Docker
 
 ```sh
 hexabot dev --docker
-hexabot dev --docker --services postgres
-hexabot dev --docker --services redis
 hexabot dev --docker --services postgres,redis
 ```
 
-SQLite is the default. The Postgres overlay sets `DB_TYPE=postgres`, starts `postgres`, and exposes pgAdmin on port `9000` in dev mode.
+SQLite is the default database. The Postgres overlay sets `DB_TYPE=postgres` and exposes pgAdmin on port `9000` in dev mode. Docker compose reads `.env.docker` — copy `.env.docker.example` first and change all `dev_only` secrets before exposing the app.
 
-Docker compose reads `.env.docker`. Copy `.env.docker.example` to `.env.docker` before running Docker and change all `dev_only` secrets before exposing the app. The defaults keep `DB_SYNCHRONIZE=true` so a fresh Postgres volume boots; review that setting before running against an existing production database.
-
-Production-style Docker run:
+Production-style run:
 
 ```sh
 hexabot start --docker --services postgres,redis --build -d
 ```
+
+Note: the coding agent's sandboxes talk to the Docker daemon directly, so the API process needs access to a Docker socket. Sandbox reuse is in-process; run a single API replica (multi-replica support would need a distributed sandbox store).
 
 ## Project Map
 
 | Path | Purpose |
 | --- | --- |
 | `src/main.ts` | Boots the Hexabot app. |
-| `src/app.module.ts` | Root module; import your app modules here. |
-| `src/hello.controller.ts` | Tiny example controller. |
-| `src/extensions/actions/` | Custom workflow actions and translations. |
-| `src/extensions/helpers/` | Helper integrations. |
-| `src/extensions/channels/` | Channel integrations. |
+| `src/app.module.ts` | Root module. |
+| `src/extensions/actions/coding/` | The `ai_coding_agent` action (TanStack AI sandboxes). |
+| `workflows/Slack2PR.workflow.yml` | The Slack2PR workflow bundle (workflow, memory definition, credential refs). |
 | `docker/` | Compose base file and optional service overlays. |
 | `hexabot.config.json` | CLI scripts, env paths, package manager, and Docker config. |
 
-## Handy CLI
+## Why This Project Exists
 
-```sh
-hexabot env init
-hexabot env init --docker
-hexabot env list
-hexabot config show
-hexabot docker ps
-hexabot docker logs api -f
-```
-
-Keep this README close to the app. Update it when your project gains new scripts, services, extensions, or deployment rules.
+Hexabot lets you build agentic workflows across channels — conversational, scheduled, tool-calling, memory-aware. Slack2PR is the dogfooding proof: if a workflow engine can automate the software development lifecycle itself — requirements, planning, implementation, testing, code review conversations, and delivery — it can automate anything. Fork it, point it at your repo, and put your AI teammate on payroll.
