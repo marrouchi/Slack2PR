@@ -57,7 +57,7 @@ Requirements:
 - Node.js `24.17.x`
 - Docker (required — the coding agent runs its sandboxes in Docker)
 - A Slack app for your workspace ([setup guide](https://hexabot.ai/extensions/67613afd203814420b6483d1))
-- An LLM provider API key for your chosen harness, and a GitHub token with repo access
+- A GitHub token and an LLM provider API key for the workflow defaults, or credentials for the harness/model provider you choose
 
 Run it:
 
@@ -69,10 +69,14 @@ npm run dev            # or: hexabot dev
 
 The admin UI runs at `http://localhost:3000`. Then:
 
-1. **Add credentials** in the admin UI: your LLM provider API key (e.g. Google Generative AI, Anthropic, OpenAI) and a GitHub token.
-2. **Import the workflow**: in the admin UI, open the workflow visual editor and import [workflows/Slack2PR.workflow.yml](workflows/Slack2PR.workflow.yml), then point the `repository` inputs at your target repo and map the credential placeholders to the credentials you created.
-3. **Connect Slack** via the Slack channel integration and subscribe the workflow to it.
-4. **Mention the bot** in Slack: *"Add a dark-mode toggle to the settings page"* — answer a couple of quick-reply questions, and watch the PR arrive.
+1. **Create credentials** in the admin UI:
+   - GitHub: create a personal access token that can clone, push branches, and open pull requests on the target repository. A fine-grained PAT should grant **Contents: read/write** and **Pull requests: read/write**; a classic PAT needs equivalent `repo` access.
+   - Google AI: the bundled workflow uses Google Generative AI (`gemini-*`) for both the interview model and the default OpenCode coding-agent runs, so use a paid-tier Google AI key.
+2. **Import the workflow**: in the admin UI, open the workflow visual editor and import [workflows/Slack2PR.workflow.yml](workflows/Slack2PR.workflow.yml).
+3. **Configure the imported workflow**: point every `repository` input at your target repo, replace the mock GitHub and Google AI credential placeholders with the credentials you created, and review the AI coding agent settings before publishing.
+4. **Adapt the coding stack if needed**: each `ai_coding_agent` step can use a different harness and model. The action supports Claude Code, Codex, OpenCode, and Grok Build; update `harness`, `model`, `agent_api_key`, and `agent_api_key_env` to match the provider you want. If you replace Google AI entirely, update the `interview_model` binding too. You can use another hosted provider, or a local provider, as long as the selected harness can reach it from inside the Docker sandbox.
+5. **Connect Slack** via the Slack channel integration and subscribe the workflow to it.
+6. **Mention the bot** in Slack: *"Add a dark-mode toggle to the settings page"* — answer a couple of quick-reply questions, and watch the PR arrive.
 
 ## Commands
 
