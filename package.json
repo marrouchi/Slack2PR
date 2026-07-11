@@ -35,7 +35,7 @@
     "ai": "^6.0.17",
     "chokidar": "^4.0.3",
     "dotenv": "^16.4.5",
-    "hexabot-channel-slack": "^2.2.3",
+    "hexabot-channel-slack": "^3.0.5",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "undici": "^6.27.0",
