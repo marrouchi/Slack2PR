@@ -4,6 +4,8 @@ Mention it in Slack like a teammate, describe a feature or a bug, and it plans, 
 
 Slack2PR is a [Hexabot](https://hexabot.ai) app that automates the software development lifecycle end to end: a Slack message triggers an agentic workflow that interviews you about requirements, breaks the work into components, implements them one by one inside a sandboxed clone of your repository, writes unit tests, and replies in the thread with a PR link. It exists to answer the question every Hexabot engineer eventually gets asked: *"Are you using it yourself?"* — yes, even to build Hexabot.
 
+Watch the [YouTube video demo](https://youtu.be/2Ex3OkX-Eh8).
+
 ## How It Works
 
 ```
